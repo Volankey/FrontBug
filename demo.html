@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #div {
+            height: 100px;
+            background-color: antiquewhite
+        }
+    </style>
+    <script src="frontbug.js"></script>
+</head>
+
+<body>
+    <!-- <img src="http://www.1.com/1.jpg" alt=""> -->
+    <div id="div"></div>
+
+    <script>
+        FrontBug.setConfig({
+            reportTo: "http://localhost:3000/report.cgi",
+            reportKey: "fbug",
+            reportPreFix: "test"
+        })
+
+        // var a = 10
+        // for (var i = 0; i < o; i++) {
+
+        // }
+        // fetch("/123",{
+        //     headers:{
+        //         method:"post"
+        //     }
+        // })
+        //无法监听
+        ajax("http://140.143.62.133:3001/apis/song_list1", function (d) {
+            console.log(d);
+        })
+
+        function ajax(url, fn) {
+            // XMLHttpRequest对象用于在后台与服务器交换数据  
+            var xhr = new XMLHttpRequest();
+            // console.log(xhr)
+            xhr.open('GET', url, true);
+           
+            xhr.onreadystatechange = function () {
+                // readyState == 4说明请求已完成
+                if (xhr.readyState == 4 && xhr.status == 200 || xhr.status == 304) {
+                    // 从服务器获得数据 
+                    fn.call(this, xhr.responseText);
+                }
+            };
+            xhr.send();
+        }
+    </script>
+</body>
+
+</html>
