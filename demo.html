@@ -35,11 +35,18 @@
         //         method:"post"
         //     }
         // })
-        //无法监听
-        ajax("http://140.143.62.133:3001/apis/song_list1", function (d) {
+        //无法监听 跨域错误具体信息，但可不捕获到发生了错误，以及url和方法
+        //暂时无法支持压缩后的代码
+        ajax("http://www.baidu.com", function (d) {
             console.log(d);
         })
-
+        var i = 0;
+    //    function a(){
+    //        a();
+    //    }
+    //    a();
+        
+        // decodeURI('%2')
         function ajax(url, fn) {
             // XMLHttpRequest对象用于在后台与服务器交换数据  
             var xhr = new XMLHttpRequest();

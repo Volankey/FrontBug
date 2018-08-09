@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>error list</title>
+    <style>
+        html *{
+            margin: 0;
+            padding: 0;
+        }
+        #list li{
+            list-style: none;
+            overflow: auto;
+            margin-bottom: 5px;
+        }
+        #list li p{
+            background-color: rgba(255, 240, 240);
+            border: 1px solid rgb(254, 214, 215);
+            padding: 10px 20px;
+            /* border-bottom: 1px solid rgb(254, 214, 215); */
+        }
+    </style>
+</head>
+
+<body>
+    <ul id="list">
+
+    </ul>
+    <script>
+        (function () {
+            var list = document.getElementById("list");
+
+            function renderReport(errorList) {
+               
+                var frg = document.createDocumentFragment();
+                errorList.forEach(error => {
+                    // error = JSON.parse(error);  
+                    var li = document.createElement("li");
+                    var p = document.createElement("p");
+                    p.innerText = error["fbug"];
+                    li.appendChild(p);
+                    frg.appendChild(li);
+                });
+                list.appendChild(frg);
+            }
+
+            function getReoprt(callback) {
+                return function _getReoprt() {
+                    fetch("/reports/get").then((data)=>{
+                        return  data.text();
+                    }).then(text=>callback(JSON.parse(text)))
+                }
+            }
+
+
+            var getErrorList = getReoprt(renderReport);
+
+            getErrorList();
+        }())
+    </script>
+</body>
+
+</html>

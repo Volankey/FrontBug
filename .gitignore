@@ -21,4 +21,5 @@ yarn-debug.log*
 yarn-error.log*
 .idea
 *.xml
-
+# logs
+front-bug-behind/logs/*

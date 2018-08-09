@@ -6,15 +6,15 @@
         version = appInfo();
     //初始配置
     FrontBug.config = {
-        reportTo: null,
-        reportPreFix: "",
-        reportKey: "frontbug",
-        isConsole: true,
-        reportImg:true,
+        reportTo: null,//上报地址
+        reportPreFix: "",//前缀
+        reportKey: "frontbug",//key
+        isConsole: true,//输出到控制台
+        reportImg:true,//上报image错误
+        sampling:0.3, //采样率
         otherData: {
             device: device,
             env: version,
-
         }
     }
     //输出列表
@@ -106,7 +106,7 @@
         // @prop {String|Object} reason - 异常信息或rejected的内容
 
         // 会阻止异常继续抛出，不让Uncaught(in promise) Error产生
-
+        console.log(e);
         window.onerror(e, e.reason.value, 0, 0, e)
 
 
@@ -146,14 +146,14 @@
     }
     var handler = {};
 
-    handler.ReferenceError = handler.default = function (error, msg, url, line, col) {
+    handler.ReferenceError = handler.default = function (error, msg) {
         var message = msg;
         var emsg = "";
         if(typeof msg === "string"){
             emsg += msg;
         }
         if (error && error.stack) {
-            emsg += processStackMsg(error)
+            emsg = processStackMsg(error)
         }
         // 判断是否是Event触发了错误
         if (Event.prototype.isPrototypeOf(message)) {
@@ -161,10 +161,11 @@
             // emsg +=
             //     `${message.type?""+message.type+message.target?message.target.tagName+"::"+ message.target.src:"":""}`;
         }
+       
         return emsg;
     }
 
-    function getSrc(emsg) {
+    function getSrc(emsg,url,line,col,errorType) {
         //防止过大
         emsg = (emsg + "" || "").substr(0, 500);
 
@@ -179,36 +180,45 @@
                 src += "&" + key + "=" + setting.otherData[key];
             })
             src += "&t=" + new Date().getTime();
-            console.log(src)
+            src += "&url=" + url;
+            src += "&l=" + line;
+            src += "&c=" + col;
+            src += "&e=" + errorType;
+            // console.log(src)
             //提交report
-            return src
+            return src;
         }
     }
     window.onerror = function (msg, url, line, col, error) {
-        console.log(getObjectClass(error))
+        console.log(getObjectClass(error));
         var errorType = getObjectClass(error);
+
         if (handler[errorType] == undefined) {
             console.log("默认");
             
-            report(getSrc(handler.default(error, msg, url, line, col)));
+            report(getSrc(handler.default(error, msg), url, line, col,errorType));
 
         } else {
-            report(getSrc(handler[errorType](error, msg, url, line, col)));
+            report(getSrc(handler[errorType](error, msg), url, line, col,errorType));
         }
         return FrontBug.config.isConsole;
     }
 
     function report(src) {
-        if (!src)
-            return;
-        var img = new Image();
-        img.src = src;
-        img.onload = function () {
-            img = null;
+        // 只采集 30%
+        if(Math.random() < FrontBug.config.sampling) {
+            if (!src)
+                return;
+            var img = new Image();
+            img.src = src;
+            img.onload = function () {
+                img = null;
+            }
         }
+       
     }
     //添加一个PromiseRejectionEvent处理 需返回一个错误信息的字符串！
-    FrontBug.addHandler("PromiseRejectionEvent", function (error, msg, url, line, col) {
+    FrontBug.addHandler("PromiseRejectionEvent", function (error, msg) {
         console.log(error);
         return FrontBug.processStackMsg(error.reason)
     })
@@ -217,7 +227,7 @@
     FrontBug.config.reportImg && document.addEventListener("error", function (e) {
         var elem = e.target;
         if (elem.tagName.toLowerCase() == "img") {
-            window.onerror(e,"",0,0,e);
+            window.onerror(e,elem.src,0,0,e);
         }
     },true);
 
@@ -250,11 +260,11 @@
         }
         
         //绑定当前xhr
-        function hs(){
-            handleStatus.call(xhr,hs);
+        function hs(e){
+            handleStatus.call(xhr,hs,e);
         }
-        function he(){
-            return handleError.call(xhr,he);
+        function he(e){
+            return handleError.call(xhr,he,e);
         }
 
         xhr.addEventListener("readystatechange",hs);
@@ -262,14 +272,14 @@
         
         return xhr;
     }
-    function handleError(callback){
+    function handleError(callback,e){
         var xhr = this;
        
         xhr.count = 1;
     
-        var mes = "XHR ERROR "+xhr.requestUrl+":"+xhr.method;
+        var mes = "XHR ERROR "+window.location.href+" request to "+xhr.requestUrl+":"+xhr.method;
         // var e = new Error(mes);
-        window.onerror(mes,"",0,0,undefined);
+        window.onerror(mes,xhr.requestUrl,0,0,e);
         xhr.removeEventListener("error",callback);
         xhr = null;
         
@@ -285,10 +295,11 @@
             xhr.sendEnd = new Date().getTime();
             xhr.loadTime = xhr.sendEnd - xhr.sendStart;
             var mes = ""+xhr.status+":"+xhr.statusText+" loadtime="+xhr.loadTime+" @ "+xhr.responseURL;
-            window.onerror(mes,"",0,0,"");
+            window.onerror(mes,xhr.responseURL,0,0,xhr);
             xhr.removeEventListener("readystatechange",callback);
             xhr = null;
         }
     }
     return FrontBug;
 }))
+
