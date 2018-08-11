@@ -1,6 +1,6 @@
 (function (obj, init) {
     obj["FrontBug"] = init();
-}(this, function () {
+}(window, function () {
     var FrontBug = {},
         device = mobileType(),
         version = appInfo();
@@ -205,7 +205,7 @@
     }
 
     function report(src) {
-        // 只采集 30%
+        // 采样率控制
         if(Math.random() < FrontBug.config.sampling) {
             if (!src)
                 return;
@@ -232,6 +232,7 @@
     },true);
 
     //劫持document.createElement 为script添加result.crossOrigin
+    //同时您需要在服务端配置Access-Control-Allow-Origin 允许静态资源的源
     var createElement = document.createElement;
     document.createElement = function(type){
         var el = createElement.call(document,type);

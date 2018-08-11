@@ -46,7 +46,13 @@ log4js.configure({
         }
     }
 });
-//寻找sourcemap
+/**
+ * 
+ * @param {string} mapFile 文件名称
+ * @param {number} line 压缩后的行
+ * @param {number} col 压缩后的列
+ * @param {function} callback 成功后的回掉 传入一个result数据 包含具体原始代码行列以及代码
+ */
 async function lookSourceMap(mapFile, line, col, callback) {
     fs.readFile(mapFile, function (err, data) {
         if (err) {
@@ -109,8 +115,10 @@ router.get("/report.cgi", async function (ctx, next) {
             column
         } = data;
 
-        res.line = line || res.l;
-        res.col = column || res.c;
+        res.line = line>=0?line:res.l;
+       
+        res.col = column>=0?column:res.c;
+     
         errorList.add(res);
         logger4.debug(JSON.stringify(res));
     });
